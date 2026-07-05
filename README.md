@@ -183,8 +183,8 @@ Guava_Project/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/IsabellaDennis/Guava-Freshness-Detection.git
-cd Guava-Freshness-Detection
+git clone https://github.com/IsabellaDennis/AI-Based-Live-Guava-Freshness-Detection-System.git
+cd AI-Based-Live-Guava-Freshness-Detection-System
 
 # 2. Create a virtual environment
 python -m venv .venv
