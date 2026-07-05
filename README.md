@@ -296,21 +296,21 @@ weighted avg       1.00      1.00      1.00       227
 
 <div align="center">
 
-### Waiting State
-*System ready and scanning for objects*
-<img src="docs/02_waiting_for_inspection.png" width="600" />
-
 ### Fresh Detection
 *Guava classified as Fresh with high confidence*
-<img src="docs/03_fresh_detection.png" width="600" />
+<img src="docs/screenshot1.png" width="600" />
 
 ### Rotten Detection
 *Defective guava detected and rejected*
-<img src="docs/04_rotten_detection.png" width="600" />
+<img src="docs/screenshot2.png" width="600" />
+
+### Unknown Object Detection
+*Non-guava objects rejected before freshness inference*
+<img src="docs/screenshot3.png" width="600" />
 
 ### Inspection History
 *Filterable inspection log with production statistics*
-<img src="docs/06_inspection_history.png" width="600" />
+<img src="docs/screenshot4.png" width="600" />
 
 </div>
 
