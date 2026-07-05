@@ -1,0 +1,345 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Inspection History</title>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#2fd9f4",
+                        "surface-bright": "#31394d",
+                        "on-surface-variant": "#bbc9cd",
+                        "outline": "#859397",
+                        "surface-container-low": "#131b2e",
+                        "on-tertiary": "#67001b",
+                        "surface-container": "#171f33",
+                        "on-primary-fixed-variant": "#004e5a",
+                        "inverse-primary": "#006877",
+                        "tertiary-fixed": "#ffdadb",
+                        "surface-variant": "#2d3449",
+                        "on-primary-fixed": "#001f25",
+                        "primary-container": "#22d3ee",
+                        "on-secondary-fixed": "#0d1c2d",
+                        "surface-container-lowest": "#060e20",
+                        "on-tertiary-fixed-variant": "#92002a",
+                        "tertiary": "#ffd2d3",
+                        "surface-tint": "#2fd9f4",
+                        "on-secondary-fixed-variant": "#39485a",
+                        "surface-container-highest": "#2d3449",
+                        "primary": "#8aebff",
+                        "background": "#0b1326",
+                        "outline-variant": "#3c494c",
+                        "error": "#ffb4ab",
+                        "on-background": "#dae2fd",
+                        "on-surface": "#dae2fd",
+                        "on-secondary-container": "#a7b6cc",
+                        "tertiary-fixed-dim": "#ffb2b7",
+                        "on-tertiary-fixed": "#40000d",
+                        "on-secondary": "#233143",
+                        "tertiary-container": "#ffaaaf",
+                        "on-primary-container": "#005763",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-high": "#222a3d",
+                        "secondary-fixed-dim": "#b9c8de",
+                        "secondary": "#b9c8de",
+                        "surface": "#0b1326",
+                        "secondary-container": "#39485a",
+                        "surface-dim": "#0b1326",
+                        "inverse-on-surface": "#283044",
+                        "secondary-fixed": "#d4e4fa",
+                        "primary-fixed": "#a2eeff",
+                        "inverse-surface": "#dae2fd",
+                        "error-container": "#93000a",
+                        "on-tertiary-container": "#a0002f",
+                        "on-primary": "#00363e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "lg": "24px",
+                        "container-margin": "24px",
+                        "base": "4px",
+                        "md": "16px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "label-md": ["JetBrains Mono"],
+                        "body-md": ["Hanken Grotesk"],
+                        "label-sm": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .industrial-scrollbar::-webkit-scrollbar {
+            width: 12px;
+        }
+        .industrial-scrollbar::-webkit-scrollbar-track {
+            background: #0b1326; 
+            border-left: 1px solid #3c494c;
+        }
+        .industrial-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #2d3449;
+            border-radius: 4px;
+            border: 2px solid #0b1326;
+        }
+        .industrial-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: #3c494c;
+        }
+        .glow-cyan {
+            box-shadow: 0 0 8px 0 rgba(138, 235, 255, 0.4);
+        }
+        .table-row-industrial {
+            border-bottom: 1px solid #2d3449;
+            transition: background-color 0.2s ease;
+        }
+        .table-row-industrial:hover {
+            background-color: #131b2e;
+        }
+        .bg-blueprint {
+            background-color: #020617;
+            background-image: linear-gradient(rgba(138, 235, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(138, 235, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+    </style>
+</head>
+<body class="text-on-background min-h-screen flex items-center justify-center p-md font-body-md overflow-hidden bg-background">
+<!-- Main Container -->
+<main class="w-full max-w-7xl mx-auto flex flex-col gap-lg h-full max-h-screen">
+<!-- Inspection History Module -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT flex flex-col w-full overflow-hidden" style="height: 640px;">
+<!-- Header -->
+<header class="flex justify-between items-center px-lg py-md border-b border-outline-variant bg-surface-container-low shrink-0">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<h2 class="font-headline-md text-headline-md text-primary tracking-widest uppercase m-0">Inspection History</h2>
+</div>
+<!-- Filters -->
+<nav class="flex rounded-DEFAULT border border-outline-variant overflow-hidden bg-surface-container-highest">
+<button class="px-md py-sm font-label-md text-label-md text-background bg-primary glow-cyan border-r border-outline-variant hover:bg-primary-fixed transition-colors uppercase">
+                        All
+                    </button>
+<button class="px-md py-sm font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-variant border-r border-outline-variant transition-colors uppercase">
+                        Accepted
+                    </button>
+<button class="px-md py-sm font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-variant border-r border-outline-variant transition-colors uppercase">
+                        Rejected
+                    </button>
+<button class="px-md py-sm font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors uppercase">
+                        Unknown
+                    </button>
+</nav>
+</header>
+<!-- Table Header (Fixed) -->
+<div class="grid grid-cols-[60px_2fr_2fr_2fr_1.5fr_1.5fr_120px] gap-sm px-lg py-sm bg-surface-container-highest border-b border-outline-variant font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider shrink-0 pr-[24px]">
+<div class="text-center">#</div>
+<div class="">Inspection ID</div>
+<div class="">Time Stamp</div>
+<div class="text-center">Result</div>
+<div class="text-center">Confidence</div>
+<div class="text-center">Inspection Time</div>
+<div class="text-center">Action</div>
+</div>
+<!-- Table Body (Scrollable) -->
+<div class="overflow-y-auto industrial-scrollbar flex-1 bg-surface-container-lowest">
+<div class="flex flex-col">
+<!-- Row 1 -->
+<div class="grid grid-cols-[60px_2fr_2fr_2fr_1.5fr_1.5fr_120px] gap-sm px-lg py-md items-center table-row-industrial font-label-md text-label-md text-on-surface">
+<div class="text-center text-on-surface-variant">1</div>
+<div class="text-on-surface">INSP-20260704-182255</div>
+<div class="text-on-surface-variant">2026-07-04 18:23:04</div>
+<div class="flex justify-center">
+<span class="bg-error-container text-on-error-container border border-error px-sm py-xs text-[10px] uppercase font-bold tracking-widest whitespace-nowrap">Rejected - Rotten</span>
+</div>
+<div class="text-center text-error font-bold">96.2%</div>
+<div class="text-center text-on-surface-variant">5.08s</div>
+<div class="flex justify-center gap-xs">
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="grid grid-cols-[60px_2fr_2fr_2fr_1.5fr_1.5fr_120px] gap-sm px-lg py-md items-center table-row-industrial font-label-md text-label-md text-on-surface">
+<div class="text-center text-on-surface-variant">2</div>
+<div class="text-on-surface">INSP-20260704-182115</div>
+<div class="text-on-surface-variant">2026-07-04 18:20:11</div>
+<div class="flex justify-center">
+<span class="bg-[#003e1e] text-[#a0f0c0] border border-[#34c759] px-sm py-xs text-[10px] uppercase font-bold tracking-widest whitespace-nowrap">Accepted - Fresh</span>
+</div>
+<div class="text-center text-[#34c759] font-bold">100.0%</div>
+<div class="text-center text-on-surface-variant">4.92s</div>
+<div class="flex justify-center gap-xs">
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="grid grid-cols-[60px_2fr_2fr_2fr_1.5fr_1.5fr_120px] gap-sm px-lg py-md items-center table-row-industrial font-label-md text-label-md text-on-surface">
+<div class="text-center text-on-surface-variant">3</div>
+<div class="text-on-surface">INSP-20260704-181947</div>
+<div class="text-on-surface-variant">2026-07-04 18:19:47</div>
+<div class="flex justify-center">
+<span class="bg-[#003e1e] text-[#a0f0c0] border border-[#34c759] px-sm py-xs text-[10px] uppercase font-bold tracking-widest whitespace-nowrap">Accepted - Fresh</span>
+</div>
+<div class="text-center text-[#34c759] font-bold">99.5%</div>
+<div class="text-center text-on-surface-variant">5.12s</div>
+<div class="flex justify-center gap-xs">
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<!-- Row 4 -->
+<div class="grid grid-cols-[60px_2fr_2fr_2fr_1.5fr_1.5fr_120px] gap-sm px-lg py-md items-center table-row-industrial font-label-md text-label-md text-on-surface">
+<div class="text-center text-on-surface-variant">4</div>
+<div class="text-on-surface">INSP-20260704-181823</div>
+<div class="text-on-surface-variant">2026-07-04 18:18:23</div>
+<div class="flex justify-center">
+<span class="bg-error-container text-on-error-container border border-error px-sm py-xs text-[10px] uppercase font-bold tracking-widest whitespace-nowrap">Rejected - Rotten</span>
+</div>
+<div class="text-center text-error font-bold">89.7%</div>
+<div class="text-center text-on-surface-variant">4.87s</div>
+<div class="flex justify-center gap-xs">
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<!-- Row 5 -->
+<div class="grid grid-cols-[60px_2fr_2fr_2fr_1.5fr_1.5fr_120px] gap-sm px-lg py-md items-center table-row-industrial font-label-md text-label-md text-on-surface">
+<div class="text-center text-on-surface-variant">5</div>
+<div class="text-on-surface">INSP-20260704-181605</div>
+<div class="text-on-surface-variant">2026-07-04 18:16:05</div>
+<div class="flex justify-center">
+<span class="bg-[#003e1e] text-[#a0f0c0] border border-[#34c759] px-sm py-xs text-[10px] uppercase font-bold tracking-widest whitespace-nowrap">Accepted - Fresh</span>
+</div>
+<div class="text-center text-[#34c759] font-bold">98.1%</div>
+<div class="text-center text-on-surface-variant">5.21s</div>
+<div class="flex justify-center gap-xs">
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<!-- Row 6 -->
+<div class="grid grid-cols-[60px_2fr_2fr_2fr_1.5fr_1.5fr_120px] gap-sm px-lg py-md items-center table-row-industrial font-label-md text-label-md text-on-surface">
+<div class="text-center text-on-surface-variant">6</div>
+<div class="text-on-surface">INSP-20260704-181502</div>
+<div class="text-on-surface-variant">2026-07-04 18:15:22</div>
+<div class="flex justify-center">
+<span class="bg-[#5c3e00] text-[#ffdd88] border border-[#ffb300] px-sm py-xs text-[10px] uppercase font-bold tracking-widest whitespace-nowrap">Unknown</span>
+</div>
+<div class="text-center text-[#ffb300] font-bold">45.3%</div>
+<div class="text-center text-on-surface-variant">4.65s</div>
+<div class="flex justify-center gap-xs">
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<!-- Row 7 -->
+<div class="grid grid-cols-[60px_2fr_2fr_2fr_1.5fr_1.5fr_120px] gap-sm px-lg py-md items-center table-row-industrial font-label-md text-label-md text-on-surface">
+<div class="text-center text-on-surface-variant">7</div>
+<div class="text-on-surface">INSP-20260704-181330</div>
+<div class="text-on-surface-variant">2026-07-04 18:13:30</div>
+<div class="flex justify-center">
+<span class="bg-error-container text-on-error-container border border-error px-sm py-xs text-[10px] uppercase font-bold tracking-widest whitespace-nowrap">Rejected - Rotten</span>
+</div>
+<div class="text-center text-error font-bold">94.6%</div>
+<div class="text-center text-on-surface-variant">5.33s</div>
+<div class="flex justify-center gap-xs">
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<!-- Row 8 -->
+<div class="grid grid-cols-[60px_2fr_2fr_2fr_1.5fr_1.5fr_120px] gap-sm px-lg py-md items-center table-row-industrial font-label-md text-label-md text-on-surface">
+<div class="text-center text-on-surface-variant">8</div>
+<div class="text-on-surface">INSP-20260704-181158</div>
+<div class="text-on-surface-variant">2026-07-04 18:11:58</div>
+<div class="flex justify-center">
+<span class="bg-[#003e1e] text-[#a0f0c0] border border-[#34c759] px-sm py-xs text-[10px] uppercase font-bold tracking-widest whitespace-nowrap">Accepted - Fresh</span>
+</div>
+<div class="text-center text-[#34c759] font-bold">98.9%</div>
+<div class="text-center text-on-surface-variant">4.75s</div>
+<div class="flex justify-center gap-xs">
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT border border-outline-variant bg-surface-container-low hover:border-primary hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Table Footer -->
+<div class="px-lg py-sm bg-surface-container border-t border-outline-variant text-on-surface-variant font-label-sm text-label-sm flex justify-between items-center shrink-0">
+<span class="">Showing 8 of 1,204 records</span>
+<span class="flex items-center gap-sm">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    Live Feed Active
+                </span>
+</div>
+</section>
+</main>
+
+
+</body></html>

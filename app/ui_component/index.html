@@ -1,0 +1,665 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>QualiVision AI - Guava Freshness Detection</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-container": "#39485a",
+                        "outline-variant": "#3c494c",
+                        "secondary-fixed-dim": "#b9c8de",
+                        "surface": "#0b1326",
+                        "inverse-surface": "#dae2fd",
+                        "tertiary-fixed": "#ffdadb",
+                        "secondary-fixed": "#d4e4fa",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#2fd9f4",
+                        "error-container": "#93000a",
+                        "background": "#0b1326",
+                        "surface-container-lowest": "#060e20",
+                        "surface-container-low": "#131b2e",
+                        "on-surface": "#dae2fd",
+                        "surface-dim": "#0b1326",
+                        "on-primary-fixed-variant": "#004e5a",
+                        "tertiary": "#ffd2d3",
+                        "on-secondary-fixed-variant": "#39485a",
+                        "on-primary-container": "#005763",
+                        "inverse-on-surface": "#283044",
+                        "surface-container-highest": "#2d3449",
+                        "error": "#ffb4ab",
+                        "on-error-container": "#ffdad6",
+                        "outline": "#859397",
+                        "surface-bright": "#31394d",
+                        "on-tertiary-fixed-variant": "#92002a",
+                        "surface-variant": "#2d3449",
+                        "surface-container": "#171f33",
+                        "primary-fixed": "#a2eeff",
+                        "on-tertiary-container": "#a0002f",
+                        "primary-container": "#22d3ee",
+                        "on-secondary": "#233143",
+                        "on-background": "#dae2fd",
+                        "on-tertiary-fixed": "#40000d",
+                        "tertiary-fixed-dim": "#ffb2b7",
+                        "secondary": "#b9c8de",
+                        "surface-container-high": "#222a3d",
+                        "on-secondary-container": "#a7b6cc",
+                        "on-surface-variant": "#bbc9cd",
+                        "on-primary": "#00363e",
+                        "tertiary-container": "#ffaaaf",
+                        "on-primary-fixed": "#001f25",
+                        "on-tertiary": "#67001b",
+                        "on-secondary-fixed": "#0d1c2d",
+                        "surface-tint": "#2fd9f4",
+                        "primary": "#8aebff",
+                        "inverse-primary": "#006877"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.125rem",
+                        lg: "0.25rem",
+                        xl: "0.5rem",
+                        full: "0.75rem"
+                    },
+                    spacing: {
+                        sm: "8px",
+                        xl: "32px",
+                        lg: "24px",
+                        xs: "4px",
+                        "container-margin": "24px",
+                        "md": "16px",
+                        "gutter": "16px",
+                        base: "4px"
+                    },
+                    fontFamily: {
+                        "headline-md": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "label-md": ["JetBrains Mono"],
+                        "body-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "label-sm": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"]
+                    },
+                    fontSize: {
+                        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "label-md": ["14px", { lineHeight: "20px", letterSpacing: "0.05em", fontWeight: "500" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+                        "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.08em", fontWeight: "500" }],
+                        "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                        "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0b1326;
+            color: #dae2fd;
+        }
+        .hud-grid {
+            background-image: 
+                linear-gradient(to right, rgba(47, 217, 244, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(47, 217, 244, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .neon-glow {
+            box-shadow: 0 0 8px rgba(47, 217, 244, 0.5);
+        }
+        .panel {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 0.25rem;
+        }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b1326; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2fd9f4; 
+        }
+    
+        .history-table-body{
+            max-height:340px;
+            overflow-y:auto;
+        }
+        .history-table thead{
+            position:sticky;
+            top:0;
+            z-index:20;
+        }
+
+    </style>
+</head>
+<body class="h-screen w-full overflow-hidden flex font-body-md hud-grid">
+<!-- Left Sidebar -->
+<aside class="w-72 bg-surface-container-lowest border-r border-outline-variant flex flex-col h-full z-10 shrink-0">
+<!-- Logo -->
+<div class="p-lg border-b border-outline-variant flex items-center gap-sm pt-xl">
+<span class="material-symbols-outlined text-primary text-3xl">radar</span>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary tracking-wider uppercase">QualiVision AI</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Core Intelligence</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-md space-y-lg">
+<!-- QC Sensor Control -->
+<section>
+<h2 class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs mb-sm">
+<span class="material-symbols-outlined text-sm">settings_input_component</span> QC SENSOR CONTROL PANEL
+                </h2>
+<div class="flex gap-sm">
+<button id="btn-start" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-label-md text-label-md py-sm rounded flex items-center justify-center gap-xs transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: &quot;FILL&quot; 1;">play_arrow</span> START FEED
+                    </button>
+<button id="btn-stop" class="flex-1 bg-red-700 hover:bg-red-600 text-white font-label-md text-label-md py-sm rounded flex items-center justify-center gap-xs transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: &quot;FILL&quot; 1;">stop</span> STOP FEED
+                    </button>
+</div>
+</section>
+<!-- System Actions -->
+<section>
+<h2 class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs mb-sm">
+<span class="material-symbols-outlined text-sm">settings_suggest</span> SYSTEM ACTIONS
+                </h2>
+<div class="grid grid-cols-2 gap-sm">
+<button class="bg-surface-container-low border border-outline-variant hover:border-primary text-on-surface font-label-sm text-label-sm py-sm rounded flex items-center justify-center gap-xs transition-all">
+<span class="material-symbols-outlined text-sm">restart_alt</span> RESET
+                    </button>
+<button class="bg-surface-container-low border border-outline-variant hover:border-primary text-on-surface font-label-sm text-label-sm py-sm rounded flex items-center justify-center gap-xs transition-all">
+<span class="material-symbols-outlined text-sm">tune</span> RECALIBRATE
+                    </button>
+<button class="col-span-2 bg-surface-container-low border border-outline-variant hover:border-primary text-on-surface font-label-sm text-label-sm py-sm rounded flex items-center justify-center gap-xs transition-all">
+<span class="material-symbols-outlined text-sm">download</span> EXPORT CSV REPORT
+                    </button>
+<button class="col-span-2 bg-surface-container-low border border-outline-variant hover:border-primary text-on-surface font-label-sm text-label-sm py-sm rounded flex items-center justify-center gap-xs transition-all">
+<span class="material-symbols-outlined text-sm">photo_camera</span> TAKE SNAPSHOT NOW
+                    </button>
+</div>
+</section>
+<!-- Threshold Settings -->
+<section class="border-t border-outline-variant pt-lg">
+<h2 class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs mb-md">
+<span class="material-symbols-outlined text-sm">tune</span> THRESHOLD SETTINGS
+                </h2>
+<div class="space-y-md">
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-xs">
+<span class="text-on-surface">Accept Threshold (Fresh Limit)</span>
+</div>
+<div class="text-green-500 font-label-md text-label-md mb-1">0.25</div>
+<div class="w-full h-1 bg-surface-container-high rounded-full relative">
+<div class="absolute left-0 top-0 h-full bg-green-500 rounded-full w-1/4"></div>
+<div class="absolute left-1/4 top-1/2 -translate-y-1/2 w-3 h-3 bg-green-400 rounded-full cursor-pointer hover:scale-125 transition-transform"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-xs">
+<span class="text-on-surface">Reject Threshold (Rotten Limit)</span>
+</div>
+<div class="text-red-500 font-label-md text-label-md mb-1">0.75</div>
+<div class="w-full h-1 bg-surface-container-high rounded-full relative">
+<div class="absolute left-0 top-0 h-full bg-red-500 rounded-full w-3/4"></div>
+<div class="absolute left-3/4 top-1/2 -translate-y-1/2 w-3 h-3 bg-red-400 rounded-full cursor-pointer hover:scale-125 transition-transform"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- System Toggles -->
+<section class="border-t border-outline-variant pt-lg">
+<h2 class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs mb-md">
+<span class="material-symbols-outlined text-sm">toggle_on</span> SYSTEM TOGGLES
+                </h2>
+<div class="space-y-sm">
+<div class="flex justify-between items-center bg-surface-container-low p-sm rounded border border-outline-variant">
+<span class="font-label-sm text-label-sm text-on-surface flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm">volume_up</span> VOICE OUTPUT
+                        </span>
+<div class="w-8 h-4 bg-green-500 rounded-full relative cursor-pointer">
+<div class="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+<div class="flex justify-between items-center bg-surface-container-low p-sm rounded border border-outline-variant">
+<span class="font-label-sm text-label-sm text-on-surface flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm">notifications_active</span> ALARM ALERTS
+                        </span>
+<div class="w-8 h-4 bg-green-500 rounded-full relative cursor-pointer">
+<div class="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Operator Card -->
+<div class="p-md border-t border-outline-variant bg-surface-container-low">
+<button class="w-full flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant mb-sm hover:text-primary transition-colors">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-sm">admin_panel_settings</span> ADVANCED SETTINGS</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+<div class="flex items-center gap-sm mt-md">
+<div class="w-10 h-10 rounded-full border border-primary flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">Operator: <span class="text-on-surface">Quality Control Team</span></div>
+<div class="font-label-sm text-label-sm text-primary">Role: <span class="text-on-surface-variant">Inspection Operator</span></div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full overflow-hidden">
+<!-- Top App Bar equivalent header area -->
+<header class="h-16 border-b border-outline-variant flex items-center justify-between px-lg shrink-0 bg-surface-container-lowest/80 backdrop-blur">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-none pt-sm mt-1 mt-md">AI-Based Live Guava Freshness Detection System</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Industrial Quality Control Dashboard – Live Conveyor Inspection Telemetry</p>
+</div>
+<div class="flex items-center gap-lg">
+<div class="text-right pt-sm">
+<div class="font-label-sm text-label-sm text-on-surface-variant flex items-center justify-end gap-sm mb-1">
+                        SYSTEM STATUS <span class="bg-green-600 text-white px-2 py-0.5 rounded text-[10px]">ONLINE</span>
+</div>
+<div class="font-label-sm text-label-sm text-primary flex items-center gap-xs">
+                        CURRENT TIME: <span class="text-primary-fixed-dim">2026-07-04 18:23:04</span>
+</div>
+</div>
+</div>
+</header>
+<div class="flex-1 flex p-md gap-md overflow-hidden pt-lg bg-surface">
+<!-- Center Column (Video & History) -->
+<div class="flex-1 flex flex-col gap-md min-w-0">
+<!-- Live Video Feed -->
+<div class="panel flex-1 flex flex-col min-h-0 relative group">
+<div class="h-8 border-b border-outline-variant flex items-center justify-between px-md bg-surface-container-low">
+<div class="font-label-sm text-label-sm text-primary flex items-center gap-xs">
+<span class="material-symbols-outlined text-xs">photo_camera</span> LIVE OPTICAL VIDEO STREAM
+                        </div>
+<div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs border border-outline-variant px-2 py-0.5 rounded bg-surface-container-lowest text-[10px]">
+<span id="live-badge-dot" class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> <span id="live-badge-text">LIVE WEBCAM</span>
+                        </div>
+</div>
+<div class="flex-1 relative overflow-hidden bg-black">
+<!-- Placeholder for WebGL/Video feed - using image as requested -->
+<img class="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-screen" data-alt="A high resolution, detailed close-up shot of a single, fresh green guava sitting on a dark, textured industrial metallic surface. The lighting is dramatic, professional studio lighting with a slight cool, cinematic blue tint emphasizing the high-tech, clinical inspection environment. The background is softly blurred, focusing entirely on the intricate texture and vibrant color of the fruit against the stark, modern industrial setting." src="" id="live-feed">
+<!-- Overlay UI -->
+<div id="waiting-overlay" class="absolute inset-0 flex items-center justify-center">
+<div class="border border-primary border-dashed bg-surface-container-lowest/70 backdrop-blur-sm px-lg py-md rounded flex items-center gap-md">
+<span class="material-symbols-outlined text-4xl text-on-surface">center_focus_strong</span>
+<div>
+<div class="font-headline-md text-headline-md text-on-surface">Waiting for inspection...</div>
+<div class="font-label-md text-label-md text-primary">Show Guava to the Camera</div>
+</div>
+</div>
+</div>
+<div class="absolute bottom-md left-md right-md">
+<div class="bg-surface-container-lowest/80 backdrop-blur border border-outline-variant rounded p-sm flex items-start gap-sm">
+<span class="material-symbols-outlined text-amber-500">warning</span>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface">Optical scan system ready. Place Guava in view to begin inspection.</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">Neural engine is standing by for live detection.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Inspection History -->
+<div class="panel h-[320px] flex flex-col shrink-0 overflow-hidden">
+<div class="h-10 border-b border-outline-variant flex items-center justify-between px-md bg-surface-container-low">
+<div class="font-label-md text-label-md text-primary flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm">receipt_long</span> INSPECTION HISTORY
+                        </div>
+<div class="flex gap-sm"><button id="filter-all" class="font-label-sm text-label-sm bg-primary/10 text-primary border border-primary/50 px-4 py-1 rounded shadow-[0_0_10px_rgba(47,217,244,0.3)] transition-all">ALL</button><button id="filter-accepted" class="font-label-sm text-label-sm text-on-surface-variant border border-outline-variant hover:border-primary/50 px-4 py-1 rounded transition-colors">ACCEPTED</button><button id="filter-rejected" class="font-label-sm text-label-sm text-on-surface-variant border border-outline-variant hover:border-primary/50 px-4 py-1 rounded transition-colors">REJECTED</button><button id="filter-unknown" class="font-label-sm text-label-sm text-on-surface-variant border border-outline-variant hover:border-primary/50 px-4 py-1 rounded transition-colors">UNKNOWN</button></div>
+</div>
+<div class="flex-1 flex flex-col">
+<div class="history-table thead grid grid-cols-[40px_1fr_1fr_1fr_100px_120px_100px] gap-sm px-md py-sm border-b border-outline-variant font-label-sm text-label-sm text-on-surface-variant bg-surface-container-lowest sticky top-0 z-20"><div class="text-center">#</div><div class="">INSPECTION ID</div><div class="">TIME STAMP</div><div class="text-center">RESULT</div><div class="text-center">CONFIDENCE</div><div class="text-center">INSPECTION TIME</div><div class="text-right">ACTION</div></div>
+
+<div class="history-table-body industrial-scrollbar bg-surface-container-lowest w-full" id="history-body-2">
+<div class="flex flex-col" id="history-rows-container">
+</div>
+</div>
+
+</div>
+</div>
+</div>
+<!-- Right Sidebar (Telemetry) -->
+<aside class="w-80 flex flex-col gap-md shrink-0">
+<!-- Status & Confidence -->
+<div class="panel p-md flex flex-col items-center justify-center relative overflow-hidden group pt-xl">
+<!-- Subtle background glow -->
+<div class="absolute -top-20 -right-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all"></div>
+<div id="main-status-banner" class="w-full flex items-center gap-sm mb-lg border-b border-outline-variant pb-sm">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: &quot;FILL&quot; 1;">check</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-primary leading-tight">SYSTEM READY</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">Waiting for Detection</div>
+</div>
+</div>
+<!-- Circular Gauge placeholder using CSS -->
+<div class="relative w-40 h-40 flex items-center justify-center my-md">
+<svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+<circle cx="50" cy="50" fill="none" r="45" stroke="#2d3449" stroke-width="8"></circle>
+<circle id="gauge-ring" class="transition-all duration-300" cx="50" cy="50" fill="none" r="45" stroke="#2fd9f4" stroke-dasharray="283" stroke-dashoffset="283" stroke-width="8"></circle>
+</svg>
+<div class="absolute flex flex-col items-center">
+<span id="gauge-val" class="font-display-lg text-display-lg text-on-surface">0%</span>
+<span id="gauge-label" class="font-label-sm text-label-sm text-primary tracking-widest mt-1">WAITING</span>
+</div>
+</div>
+</div>
+<!-- Production Statistics -->
+<div class="panel flex flex-col min-h-0">
+<div class="h-10 border-b border-outline-variant flex items-center px-md bg-surface-container-low shrink-0">
+<div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Production Statistics</div>
+</div>
+<div class="p-sm grid grid-cols-2 gap-sm flex-1">
+<div class="bg-surface-container-low border border-outline-variant rounded p-sm flex items-center gap-sm hover:border-green-500/50 transition-colors">
+<span class="material-symbols-outlined text-green-500 text-2xl">check_circle</span>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant text-[10px]">ACCEPTED (FRESH)</div>
+<div class="font-headline-md text-headline-md text-on-surface" id="stat-fresh">0</div>
+</div>
+</div>
+<div class="bg-surface-container-low border border-outline-variant rounded p-sm flex items-center gap-sm hover:border-red-500/50 transition-colors">
+<span class="material-symbols-outlined text-red-500 text-2xl">cancel</span>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant text-[10px]">REJECTED (ROTTEN)</div>
+<div class="font-headline-md text-headline-md text-on-surface" id="stat-rotten">0</div>
+</div>
+</div>
+<div class="bg-surface-container-low border border-outline-variant rounded p-sm flex items-center gap-sm hover:border-amber-500/50 transition-colors">
+<span class="material-symbols-outlined text-amber-500 text-2xl">help</span>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant text-[10px]">UNKNOWN OBJECT</div>
+<div class="font-headline-md text-headline-md text-on-surface" id="stat-unknown">0</div>
+</div>
+</div>
+<div class="bg-surface-container-low border border-outline-variant rounded p-sm flex items-center gap-sm hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary text-2xl">center_focus_weak</span>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant text-[10px]">TOTAL SCANS</div>
+<div class="font-headline-md text-headline-md text-on-surface" id="stat-total">0</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Active Run Telemetry -->
+<div class="panel flex flex-col shrink-0">
+<div class="h-10 border-b border-outline-variant flex items-center px-md bg-surface-container-low">
+<div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Active Run Telemetry</div>
+</div>
+<div class="p-md space-y-md">
+<div class="grid grid-cols-2 gap-md">
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant text-[10px] mb-xs">INSPECTION ID</div>
+<div class="font-label-md text-label-md text-primary font-mono">--</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant text-[10px] mb-xs">INSPECTION TIME</div>
+<div class="font-label-md text-label-md text-primary font-mono">0.00 <span class="text-on-surface-variant text-xs">s</span></div>
+</div>
+</div>
+<div class="pt-sm border-t border-outline-variant">
+<div class="font-label-sm text-label-sm text-on-surface-variant text-[10px] mb-xs">SYSTEM RUNTIME</div>
+<div id="runtime" class="font-headline-md text-headline-md text-primary font-mono tracking-wider">00:00:00</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+
+
+
+
+
+<script>
+let currentFilter = 'ALL';
+
+function sendValue(value) {
+    window.parent.postMessage({
+        isStreamlitMessage: true,
+        type: "streamlit:setComponentValue",
+        value: value,
+        dataType: "json"
+    }, "*");
+}
+
+document.getElementById('btn-start').onclick = function() { sendValue({action: "start"}); };
+document.getElementById('btn-stop').onclick = function() { sendValue({action: "stop"}); };
+
+function setFilter(f) {
+    currentFilter = f;
+    const filters = ['ALL', 'ACCEPTED', 'REJECTED', 'UNKNOWN'];
+    filters.forEach(filter => {
+        const btn = document.getElementById('filter-' + filter.toLowerCase());
+        if (btn) {
+            if (filter === f) {
+                btn.className = "font-label-sm text-label-sm bg-primary/10 text-primary border border-primary/50 px-4 py-1 rounded shadow-[0_0_10px_rgba(47,217,244,0.3)] transition-all";
+            } else {
+                btn.className = "font-label-sm text-label-sm text-on-surface-variant border border-outline-variant hover:border-primary/50 px-4 py-1 rounded transition-colors cursor-pointer";
+            }
+        }
+    });
+    
+    if (window.lastHistoryHtml) {
+        applyHistory(window.lastHistoryHtml, false);
+    }
+}
+
+['ALL', 'ACCEPTED', 'REJECTED', 'UNKNOWN'].forEach(filter => {
+    const btn = document.getElementById('filter-' + filter.toLowerCase());
+    if (btn) {
+        btn.onclick = () => setFilter(filter);
+        btn.style.cursor = 'pointer';
+    }
+});
+
+function applyHistory(history_html, autoScroll = true) {
+    window.lastHistoryHtml = history_html;
+    const hb2 = document.getElementById('history-body-2');
+    const container = document.getElementById('history-rows-container');
+    if (!hb2 || !container) return;
+    
+    const isAtBottom = hb2.scrollHeight - hb2.scrollTop <= hb2.clientHeight + 10;
+    
+    const temp = document.createElement('div');
+    temp.innerHTML = history_html;
+    const rows = temp.querySelectorAll('.table-row-industrial');
+    rows.forEach(row => {
+        if (currentFilter !== 'ALL') {
+            if (currentFilter === 'ACCEPTED' && !row.innerHTML.includes('Accepted')) {
+                row.style.display = 'none';
+            }
+            else if (currentFilter === 'REJECTED' && !row.innerHTML.includes('Rejected')) {
+                row.style.display = 'none';
+            }
+            else if (currentFilter === 'UNKNOWN' && !row.innerHTML.includes('Unknown')) {
+                row.style.display = 'none';
+            }
+        }
+    });
+    
+    container.innerHTML = temp.innerHTML;
+    
+    if (autoScroll && isAtBottom) {
+        hb2.scrollTop = hb2.scrollHeight;
+    }
+}
+
+window.addEventListener("message", (event) => {
+    if (event.data.type === "streamlit:render") {
+        const args = event.data.args;
+        const d = args.stats;
+        
+        if (args.frame) {
+            document.getElementById('live-feed').src = "data:image/jpeg;base64," + args.frame;
+        }
+        
+        if (!d) return;
+        
+        document.getElementById('stat-fresh').innerText = d.fresh_count;
+        document.getElementById('stat-rotten').innerText = d.rotten_count;
+        document.getElementById('stat-unknown').innerText = d.unknown_count;
+        document.getElementById('stat-total').innerText = d.total_scans;
+        document.getElementById('runtime').innerText = d.runtime;
+        
+        const badgeDot = document.getElementById('live-badge-dot');
+        const badgeText = document.getElementById('live-badge-text');
+        if (d.feed_active) {
+            badgeDot.style.display = 'inline-block';
+            badgeDot.style.backgroundColor = '#22c55e'; // green-500
+            badgeDot.classList.add('animate-pulse');
+            badgeText.innerText = 'LIVE WEBCAM';
+        } else {
+            badgeDot.style.display = 'inline-block';
+            badgeDot.style.backgroundColor = '#ef4444'; // red-500
+            badgeDot.classList.remove('animate-pulse');
+            badgeText.innerText = 'CAMERA OFFLINE';
+        }
+        
+        const overlay = document.getElementById('waiting-overlay');
+        overlay.style.display = 'flex';
+        
+        const banner = document.getElementById('main-status-banner');
+        
+        if (!d.feed_active) {
+            overlay.innerHTML = `
+<div class="border border-outline-variant border-dashed bg-surface-container-lowest/70 backdrop-blur-sm px-lg py-md rounded flex items-center gap-md">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant">videocam_off</span>
+<div>
+<div class="font-headline-md text-headline-md text-on-surface-variant">Camera Offline</div>
+<div class="font-label-md text-label-md text-on-surface-variant">Press START FEED</div>
+</div>
+</div>`;
+        } else if (d.is_waiting) {
+            overlay.innerHTML = `
+<div class="border border-primary border-dashed bg-surface-container-lowest/70 backdrop-blur-sm px-lg py-md rounded flex items-center gap-md">
+<span class="material-symbols-outlined text-4xl text-on-surface">center_focus_strong</span>
+<div>
+<div class="font-headline-md text-headline-md text-on-surface">Waiting for inspection...</div>
+<div class="font-label-md text-label-md text-primary">Show Guava to the Camera</div>
+</div>
+</div>`;
+        } else if (d.status === 'FRESH') {
+            overlay.innerHTML = `
+<div class="border border-[#34c759] bg-[#003e1e]/80 backdrop-blur-sm px-lg py-md rounded flex items-center gap-md">
+<span class="material-symbols-outlined text-4xl text-[#34c759]">check_circle</span>
+<div>
+<div class="font-headline-md text-headline-md text-[#a0f0c0]">ACCEPTED - FRESH</div>
+<div class="font-label-md text-label-md text-[#34c759]">Healthy Guava Detected</div>
+</div>
+</div>`;
+        } else if (d.status === 'ROTTEN') {
+            overlay.innerHTML = `
+<div class="border border-error bg-error-container/90 backdrop-blur-sm px-lg py-md rounded flex items-center gap-md">
+<span class="material-symbols-outlined text-4xl text-on-error-container">cancel</span>
+<div>
+<div class="font-headline-md text-headline-md text-on-error-container">REJECTED - ROTTEN</div>
+<div class="font-label-md text-label-md text-error">Defective Guava Detected</div>
+</div>
+</div>`;
+        } else if (d.status === 'NOT A GUAVA') {
+            overlay.innerHTML = `
+<div class="border border-[#ffb300] bg-[#5c3e00]/90 backdrop-blur-sm px-lg py-md rounded flex items-center gap-md">
+<span class="material-symbols-outlined text-4xl text-[#ffdd88]">help</span>
+<div>
+<div class="font-headline-md text-headline-md text-[#ffdd88]">UNKNOWN OBJECT</div>
+<div class="font-label-md text-label-md text-[#ffb300]">Not a Guava</div>
+</div>
+</div>`;
+        }
+        
+        if (d.status === 'FRESH') {
+            banner.innerHTML = `
+<div class="w-10 h-10 rounded-full bg-[#34c759] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-black" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-[#34c759] leading-tight">ACCEPTED</div>
+<div class="font-label-sm text-label-sm text-[#a0f0c0]">Fresh Guava</div>
+</div>`;
+        } else if (d.status === 'ROTTEN') {
+            banner.innerHTML = `
+<div class="w-10 h-10 rounded-full bg-error flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-error" style="font-variation-settings: 'FILL' 1;">close</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-error leading-tight">REJECTED</div>
+<div class="font-label-sm text-label-sm text-error-container">Rotten Guava</div>
+</div>`;
+        } else if (d.status === 'NOT A GUAVA') {
+            banner.innerHTML = `
+<div class="w-10 h-10 rounded-full bg-[#ffb300] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-black" style="font-variation-settings: 'FILL' 1;">question_mark</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-[#ffb300] leading-tight">UNKNOWN OBJECT</div>
+<div class="font-label-sm text-label-sm text-[#ffdd88]">Not a Guava</div>
+</div>`;
+        } else {
+            banner.innerHTML = `
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-primary leading-tight">SYSTEM READY</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">Waiting for Detection</div>
+</div>`;
+        }
+        
+        document.getElementById('gauge-val').innerText = d.confidence + '%';
+        
+        let labelTxt = d.status;
+        if (d.status === 'NOT A GUAVA') labelTxt = 'UNKNOWN';
+        if (d.is_waiting) labelTxt = 'WAITING';
+        if (!d.feed_active) labelTxt = 'OFFLINE';
+        
+        document.getElementById('gauge-label').innerText = labelTxt;
+        document.getElementById('gauge-label').style.color = d.is_waiting ? '#2fd9f4' : d.color;
+        
+        const ring = document.getElementById('gauge-ring');
+        ring.style.stroke = (!d.feed_active || d.is_waiting) ? '#2fd9f4' : d.color;
+        ring.style.strokeDashoffset = 283 - (283 * (parseInt(d.confidence)/100));
+        
+        if (d.history_html !== window.lastHistoryHtml) {
+            applyHistory(d.history_html, true);
+        }
+    }
+});
+
+// Calculate actual page height to prevent squashing
+window.addEventListener("load", function() {
+    window.parent.postMessage({
+        isStreamlitMessage: true,
+        type: "streamlit:setFrameHeight",
+        height: 1000  // Set fixed height to match dashboard layout without squashing
+    }, "*");
+});
+
+window.parent.postMessage({
+    isStreamlitMessage: true,
+    type: "streamlit:componentReady",
+    apiVersion: 1
+}, "*");
+</script>
+</body>
+</html>

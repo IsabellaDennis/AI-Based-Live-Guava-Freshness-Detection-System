@@ -1,0 +1,52 @@
+# ============================================================================
+# AI-Based Live Guava Freshness Detection System – .gitignore
+# ============================================================================
+
+# ─── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ─── Virtual Environment ────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ─── Dataset (large image files – not suitable for Git) ─────────────────────
+dataset/
+
+# ─── Evaluation sample images (large JPGs from model analysis) ──────────────
+evaluation/correct_fresh/
+evaluation/correct_rotten/
+evaluation/false_positive/
+evaluation/false_negative/
+evaluation/gradcam/
+evaluation/snapshots/
+
+# ─── IDE / Editor ───────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ─── OS Files ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Pytest ─────────────────────────────────────────────────────────────────
+.pytest_cache/
+
+# ─── Streamlit ──────────────────────────────────────────────────────────────
+.streamlit/
+
+# ─── Misc ───────────────────────────────────────────────────────────────────
+*.log
+*.tmp

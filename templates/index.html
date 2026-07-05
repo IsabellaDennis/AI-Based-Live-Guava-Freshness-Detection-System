@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QualiVision AI - Guava Inspector</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <header class="header panel">
+            <div class="brand">
+                <h1>QUALIVISION <span class="cyan">AI</span></h1>
+            </div>
+            <div class="status-indicator">
+                <div class="glow-dot active" id="system-status-dot"></div>
+                <span class="telemetry-data" id="system-status">SYSTEM ACTIVE</span>
+            </div>
+        </header>
+
+        <main class="grid-container">
+            <section class="camera-section panel">
+                <div class="panel-header">
+                    <span class="label-caps">LIVE FEED // CAMERA 01</span>
+                </div>
+                <div class="viewport-container">
+                    <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Camera Feed" />
+                    <!-- Overlays can be added here if needed -->
+                    <div class="crosshair top-left"></div>
+                    <div class="crosshair top-right"></div>
+                    <div class="crosshair bottom-left"></div>
+                    <div class="crosshair bottom-right"></div>
+                </div>
+            </section>
+
+            <aside class="sidebar right-sidebar">
+                <div class="telemetry-panel panel">
+                    <div class="panel-header">
+                        <span class="label-caps">AI TELEMETRY</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="label-caps">CURRENT STATUS</span>
+                        <div class="status-pill" id="current-label-pill">
+                            <div class="glow-dot" id="current-label-dot"></div>
+                            <span class="telemetry-data" id="current-label">UNKNOWN</span>
+                        </div>
+                    </div>
+                    <div class="data-row">
+                        <span class="label-caps">CONFIDENCE</span>
+                        <span class="telemetry-data highlight" id="current-confidence">--%</span>
+                    </div>
+                </div>
+
+                <div class="stats-panel panel">
+                    <div class="panel-header">
+                        <span class="label-caps">SESSION STATISTICS</span>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <span class="label-caps">FRESH DETECTED</span>
+                            <span class="data-lg success" id="fresh-count">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="label-caps">ROTTEN DETECTED</span>
+                            <span class="data-lg error" id="rotten-count">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls-panel panel">
+                    <div class="panel-header">
+                        <span class="label-caps">SYSTEM CONTROLS</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="resetStats()">RESET STATS</button>
+                    <button class="btn btn-secondary" onclick="exportData()">EXPORT LOG</button>
+                </div>
+            </aside>
+        </main>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
