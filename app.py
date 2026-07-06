@@ -15,14 +15,15 @@ from app.camera import Camera
 from app.predictor import predict
 from app.audio import speak
 
-# -----------------------------------------------------------------------------
-# Global Models
-# -----------------------------------------------------------------------------
-mobilenet_model = None
-try:
-    mobilenet_model = MobileNetV2(weights='imagenet')
-except Exception as e:
-    print(f"Warning: MobileNetV2 could not be loaded: {e}")
+@st.cache_resource
+def load_mobilenet_model():
+    try:
+        return MobileNetV2(weights='imagenet')
+    except Exception as e:
+        print(f"Warning: MobileNetV2 could not be loaded: {e}")
+        return None
+
+mobilenet_model = load_mobilenet_model()
 
 # -----------------------------------------------------------------------------
 # Streamlit Configuration (Hide all chrome to allow pixel-perfect iframe)
@@ -47,12 +48,13 @@ class FSMState:
     OBJECT_ENTERING = "OBJECT_ENTERING"
     VERIFYING_OBJECT = "VERIFYING_OBJECT"
     INSPECTING = "INSPECTING"
+    RESULT = "RESULT"
     FROZEN_RESULT = "FROZEN_RESULT"
     OBJECT_REMOVED = "OBJECT_REMOVED"
 
 class SystemState:
     def __init__(self):
-        self.camera = Camera()
+        self.camera = None
         
         # Counters
         self.fresh_count = 0
@@ -70,6 +72,8 @@ class SystemState:
         self.current_id = None
         self.cnn_buffer = []
         self.feed_active = False  # Changed from True for default stopped state
+        self.camera_requested = False
+        self.camera_stop_requested = False
         
         # Display variables
         self.current_frame = None
@@ -142,6 +146,10 @@ def format_runtime(seconds):
     h, m = divmod(m, 60)
     return f"{h:02d}:{m:02d}:{s:02d}"
 
+import uuid
+def generate_id():
+    return f"GUA-{uuid.uuid4().hex[:6].upper()}"
+
 def is_guava(image_roi):
     """Hybrid verification pipeline: Color -> Contour -> MobileNetV2"""
     hsv = cv2.cvtColor(image_roi, cv2.COLOR_BGR2HSV)
@@ -166,7 +174,7 @@ def is_guava(image_roi):
                     has_valid_contour = True
                     break
                     
-    if color_ratio < 0.01 and not has_valid_contour:
+    if color_ratio < 0.05 and not has_valid_contour:
         return False
         
     if not mobilenet_model:
@@ -183,7 +191,13 @@ def is_guava(image_roi):
         'plastic bag', 'toy', 'phone', 'bottle', 'cup', 'book', 'paper', 'laptop', 
         'keyboard', 'mouse', 'face', 'hand', 'pear', 'avocado', 'passion fruit', 
         'apple', 'orange', 'lemon', 'mango', 'tennis ball', 'green ball', 
-        'artificial', 'cellular', 'screen', 'monitor', 'chair', 'table', 'person', 'bag'
+        'artificial', 'cellular', 'screen', 'monitor', 'chair', 'table', 'person', 'bag',
+        'sunglasses', 'mask', 'jersey', 'suit', 'wig', 'seat belt', 'lab coat',
+        'neck brace', 'sweatshirt', 'cardigan', 'abaya', 'academic gown', 't-shirt',
+        'bow tie', 'bulletproof vest', 'jean', 'miniskirt', 'poncho', 'sarong',
+        'sombrero', 'cowboy hat', 'hair spray', 'lotion', 'band aid', 'goggles',
+        'stole', 'bath towel', 'swimming trunks', 'brassiere', 'maillot', 'pajama',
+        'apron', 'lipstick', 'glasses', 'man', 'woman', 'human'
     ]
     for _, label, _ in decoded:
         label_lower = label.lower()
@@ -197,179 +211,151 @@ def is_guava(image_roi):
 # -----------------------------------------------------------------------------
 def process_loop():
     while True:
-        if not state.feed_active:
-            frame = np.ones((480, 640, 3), dtype=np.uint8) * 16
-            state.current_frame = frame
-            
-            # Keep getting waiting stats but mark feed_active = False
-            state.current_stats = state.get_waiting_stats()
-            state.current_stats["feed_active"] = False
-            
-            time.sleep(0.1)
-            continue
-            
-        frame = state.camera.read()
-        if frame is None:
-            time.sleep(0.05)
-            continue
-            
-        h, w = frame.shape[:2]
-        size = min(h, w)
-        sy, sx = (h - size) // 2, (w - size) // 2
-        cropped = frame[sy:sy+size, sx:sx+size]
-        
-        fg_mask = state.bg_subtractor.apply(cropped)
-        motion_ratio = cv2.countNonZero(fg_mask) / (size * size)
-        object_present = motion_ratio > 0.03
-        
-        now = time.time()
-        time_in_state = now - state.state_enter_time
-        
-        color_bgr = (47, 217, 244)
-        cv2.rectangle(frame, (sx, sy), (sx+size, sy+size), color_bgr, 2)
-        
-        if state.state == FSMState.WAITING:
-            state.current_stats = state.get_waiting_stats()
-            if object_present:
-                state.state = FSMState.OBJECT_ENTERING
-                state.state_enter_time = now
+        try:
+            if state.camera_stop_requested:
+                if state.camera is not None:
+                    state.camera.release()
+                    state.camera = None
+                state.feed_active = False
+                state.camera_stop_requested = False
                 
-        elif state.state == FSMState.OBJECT_ENTERING:
-            state.current_stats = state.get_waiting_stats()
-            if not object_present:
-                state.state = FSMState.WAITING
-                state.state_enter_time = now
-            elif time_in_state >= 0.5:
-                state.total_scans += 1
-                state.current_id = f"INSP-{datetime.datetime.now().strftime('%Y%m%d')}-{state.total_scans:04d}"
-                state.state = FSMState.VERIFYING_OBJECT
-                state.state_enter_time = now
+            if state.camera_requested and not state.feed_active:
+                if state.camera is None:
+                    state.camera = Camera()
+                state.feed_active = True
+                state.camera_requested = False
                 
-        elif state.state == FSMState.VERIFYING_OBJECT:
-            if is_guava(cropped):
-                state.cnn_buffer = []
-                state.state = FSMState.INSPECTING
-                state.state_enter_time = now
-            else:
-                state.unknown_count += 1
-                speak("Unknown Object Detected")
-                state.history.append({
-                    "id": state.current_id,
-                    "time": datetime.datetime.now().strftime("%H:%M:%S"),
-                    "result": "UNKNOWN",
-                    "confidence": "0%",
-                    "color": "#f59e0b"
-                })
-                state.history = state.history[:100]
+            if not state.feed_active:
+                frame = np.ones((480, 640, 3), dtype=np.uint8) * 16
+                state.current_frame = frame
+                state.current_stats = state.get_waiting_stats()
+                state.current_stats["feed_active"] = False
+                time.sleep(0.1)
+                continue
                 
-                state.current_stats = {
-                    "status": "NOT A GUAVA",
-                    "confidence": "0",
-                    "fresh_count": str(state.fresh_count),
-                    "rotten_count": str(state.rotten_count),
-                    "unknown_count": str(state.unknown_count),
-                    "total_scans": str(state.total_scans),
-                    "history_html": state.generate_history_html(),
-                    "is_waiting": False,
-                    "feed_active": state.feed_active,
-                    "color": "#f59e0b",
-                    "runtime": format_runtime(time.time() - state.start_time)
-                }
-                state.state = FSMState.FROZEN_RESULT
-                state.state_enter_time = now
+            # Process camera frame
+            frame = state.camera.read()
+            if frame is None:
+                time.sleep(0.05)
+                continue
                 
-        elif state.state == FSMState.INSPECTING:
-            # Draw Scanning Box
-            cv2.rectangle(frame, (sx, sy), (sx+size, sy+size), (255, 255, 0), 2)
-            cv2.putText(frame, "SCANNING...", (sx, max(30, sy - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,0), 2)
+            h, w = frame.shape[:2]
+            size = min(h, w)
+            sy, sx = (h - size) // 2, (w - size) // 2
+            cropped = frame[sy:sy+size, sx:sx+size]
             
-            # Tight crop using the foreground mask to remove background
-            contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            if contours:
-                c = max(contours, key=cv2.contourArea)
-                bx, by, bw, bh = cv2.boundingRect(c)
-                pad = 10
-                bx = max(0, bx - pad)
-                by = max(0, by - pad)
-                bw = min(size - bx, bw + 2*pad)
-                bh = min(size - by, bh + 2*pad)
-                inference_img = cropped[by:by+bh, bx:bx+bw]
-            else:
-                inference_img = cropped
-                
-            score = predict(inference_img)
-            state.cnn_buffer.append(score)
+            fg_mask = state.bg_subtractor.apply(cropped)
+            motion_ratio = cv2.countNonZero(fg_mask) / (size * size)
+            object_present = motion_ratio > 0.03
             
-            if len(state.cnn_buffer) >= 6:
-                avg_score = sum(state.cnn_buffer) / 6.0
-                is_rotten = avg_score > 0.5
-                label = "ROTTEN" if is_rotten else "FRESH"
-                conf = avg_score if is_rotten else (1.0 - avg_score)
-                conf_pct = int(conf * 100)
+            now = time.time()
+            time_in_state = now - state.state_enter_time
+            
+            # State Machine Logic
+            if state.state == FSMState.WAITING:
+                if object_present:
+                    if is_guava(cropped):
+                        state.state = FSMState.INSPECTING
+                        state.state_enter_time = now
+                        state.current_id = generate_id()
+                        state.cnn_buffer = []
+                        
+            elif state.state == FSMState.INSPECTING:
+                # Draw Scanning Box
+                cv2.rectangle(frame, (sx, sy), (sx+size, sy+size), (255, 255, 0), 2)
+                cv2.putText(frame, "SCANNING...", (sx, max(30, sy - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,0), 2)
                 
-                if label == "FRESH":
-                    state.fresh_count += 1
-                    speak("Fresh Guava Detected")
-                    color_hex = "#10b981"
+                # Tight crop using the foreground mask to remove background
+                contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                if contours:
+                    c = max(contours, key=cv2.contourArea)
+                    bx, by, bw, bh = cv2.boundingRect(c)
+                    pad = 10
+                    bx = max(0, bx - pad)
+                    by = max(0, by - pad)
+                    bw = min(size - bx, bw + 2*pad)
+                    bh = min(size - by, bh + 2*pad)
+                    inference_img = cropped[by:by+bh, bx:bx+bw]
                 else:
-                    state.rotten_count += 1
-                    speak("Rotten Guava Detected")
-                    color_hex = "#ef4444"
+                    inference_img = cropped
                     
-                state.history.append({
-                    "id": state.current_id,
-                    "time": datetime.datetime.now().strftime("%H:%M:%S"),
-                    "result": label,
-                    "confidence": f"{conf_pct}%",
-                    "color": color_hex
-                })
-                state.history = state.history[:100]
+                score = predict(inference_img)
+                state.cnn_buffer.append(score)
                 
-                state.current_stats = {
-                    "status": label,
-                    "confidence": str(conf_pct),
-                    "fresh_count": str(state.fresh_count),
-                    "rotten_count": str(state.rotten_count),
-                    "unknown_count": str(state.unknown_count),
-                    "total_scans": str(state.total_scans),
-                    "history_html": state.generate_history_html(),
-                    "is_waiting": False,
-                    "feed_active": state.feed_active,
-                    "color": color_hex,
-                    "runtime": format_runtime(time.time() - state.start_time)
-                }
-                state.state = FSMState.FROZEN_RESULT
-                state.state_enter_time = now
+                if len(state.cnn_buffer) >= 6:
+                    avg_score = sum(state.cnn_buffer) / 6.0
+                    is_rotten = avg_score > 0.5
+                    label = "ROTTEN" if is_rotten else "FRESH"
+                    conf = avg_score if is_rotten else (1.0 - avg_score)
+                    conf_pct = int(conf * 100)
+                    
+                    if label == "FRESH":
+                        state.fresh_count += 1
+                        speak("Fresh Guava Detected")
+                        color_hex = "#10b981"
+                    else:
+                        state.rotten_count += 1
+                        speak("Rotten Guava Detected")
+                        color_hex = "#ef4444"
+                        
+                    state.history.append({
+                        "id": state.current_id,
+                        "time": datetime.datetime.now().strftime("%H:%M:%S"),
+                        "result": label,
+                        "confidence": f"{conf_pct}%",
+                        "color": color_hex
+                    })
+                    state.history = state.history[:100]
+                    state.total_scans += 1
+                    
+                    state.current_stats = {
+                        "status": label,
+                        "confidence": str(conf_pct),
+                        "fresh_count": str(state.fresh_count),
+                        "rotten_count": str(state.rotten_count),
+                        "unknown_count": str(state.unknown_count),
+                        "total_scans": str(state.total_scans),
+                        "history_html": state.generate_history_html(),
+                        "is_waiting": False,
+                        "feed_active": state.feed_active,
+                        "color": color_hex,
+                        "runtime": format_runtime(time.time() - state.start_time)
+                    }
+                    state.state = FSMState.FROZEN_RESULT
+                    state.state_enter_time = now
+                    
+            elif state.state == FSMState.FROZEN_RESULT:
+                color_bgr = (0, 0, 255) if state.current_stats["status"] == "ROTTEN" else ((0, 255, 0) if state.current_stats["status"] == "FRESH" else (0, 165, 255))
+                cv2.rectangle(frame, (sx, sy), (sx+size, sy+size), color_bgr, 2)
+                cv2.putText(frame, f"{state.current_stats['status']} ({state.current_stats['confidence']}%)", (sx, max(30, sy - 10)), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, color_bgr, 2)
                 
-        elif state.state == FSMState.FROZEN_RESULT:
-            color_bgr = (0, 0, 255) if state.current_stats["status"] == "ROTTEN" else ((0, 255, 0) if state.current_stats["status"] == "FRESH" else (0, 165, 255))
-            cv2.rectangle(frame, (sx, sy), (sx+size, sy+size), color_bgr, 2)
-            cv2.putText(frame, f"{state.current_stats['status']} ({state.current_stats['confidence']}%)", (sx, max(30, sy - 10)), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, color_bgr, 2)
-            
-            state.current_stats["runtime"] = format_runtime(time.time() - state.start_time)
-            
-            if not object_present:
-                state.state = FSMState.OBJECT_REMOVED
-                state.state_enter_time = now
+                state.current_stats["runtime"] = format_runtime(time.time() - state.start_time)
                 
-        elif state.state == FSMState.OBJECT_REMOVED:
-            color_bgr = (0, 0, 255) if state.current_stats["status"] == "ROTTEN" else ((0, 255, 0) if state.current_stats["status"] == "FRESH" else (0, 165, 255))
-            cv2.rectangle(frame, (sx, sy), (sx+size, sy+size), color_bgr, 2)
-            
-            state.current_stats["runtime"] = format_runtime(time.time() - state.start_time)
-            if object_present:
-                state.state = FSMState.FROZEN_RESULT
-                state.state_enter_time = now
-            elif time_in_state >= 1.0:
-                state.state = FSMState.WAITING
-                state.state_enter_time = now
-                state.current_id = None
+                if not object_present:
+                    state.state = FSMState.OBJECT_REMOVED
+                    state.state_enter_time = now
+                    
+            elif state.state == FSMState.OBJECT_REMOVED:
+                color_bgr = (0, 0, 255) if state.current_stats["status"] == "ROTTEN" else ((0, 255, 0) if state.current_stats["status"] == "FRESH" else (0, 165, 255))
+                cv2.rectangle(frame, (sx, sy), (sx+size, sy+size), color_bgr, 2)
                 
-        state.current_frame = frame
-        time.sleep(0.03)
-
-
+                state.current_stats["runtime"] = format_runtime(time.time() - state.start_time)
+                if object_present:
+                    state.state = FSMState.FROZEN_RESULT
+                    state.state_enter_time = now
+                elif time_in_state >= 1.0:
+                    state.state = FSMState.WAITING
+                    state.state_enter_time = now
+                    state.current_id = None
+                    
+            state.current_frame = frame
+            time.sleep(0.03)
+        except Exception as e:
+            import traceback
+            print(f"[PROCESS LOOP ERROR]: {e}")
+            traceback.print_exc()
+            time.sleep(0.5)
 
 if 'fsm_started' not in st.session_state:
     st.session_state.fsm_started = True
@@ -397,23 +383,34 @@ def render_dashboard():
     # Render the custom component and get actions
     # We pass key="main_ui" to ensure stable mounting
     action = ui_component(stats=state.current_stats, frame=b64_frame, key="main_ui", default=None)
+    print(f"[DEBUG] Action from UI: {action}")
 
-    # Handle actions from the frontend buttons
     if action:
         act = action.get('action')
-        if act == 'start' and not state.feed_active:
-            print("[APP] Received START FEED action")
-            state.camera = Camera()
-            state.feed_active = True
+        if act == 'start' and not state.feed_active and not state.camera_requested:
+            print("[APP] Received START FEED action - Requesting Camera")
+            state.camera_requested = True
             state.state = FSMState.WAITING
             state.current_id = None
             state.start_time = time.time()
-        elif act == 'stop' and state.feed_active:
-            print("[APP] Received STOP FEED action")
-            state.feed_active = False
-            state.camera.release()
+        elif act == 'stop' and state.feed_active and not state.camera_stop_requested:
+            print("[APP] Received STOP FEED action - Requesting Stop")
+            state.camera_stop_requested = True
 
 render_dashboard()
 
-time.sleep(0.2)
-st.rerun()
+# Hide Streamlit's visual "running" indicators to prevent flashing/blurring
+st.markdown("""
+    <style>
+        [data-testid="stStatusWidget"] {
+            visibility: hidden;
+        }
+        [data-testid="stAppViewContainer"] > .main {
+            opacity: 1 !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+if state.feed_active or state.camera_requested or state.camera_stop_requested:
+    time.sleep(0.1)  # slightly faster, but without blurring it will look smoother
+    st.rerun()

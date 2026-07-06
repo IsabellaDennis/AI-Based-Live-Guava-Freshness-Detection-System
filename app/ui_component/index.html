@@ -433,18 +433,47 @@
 
 <script>
 let currentFilter = 'ALL';
+let pendingAction = null;
+let retryInterval = null;
 
 function sendValue(value) {
+    pendingAction = value.action;
+    
+    // Send immediately
     window.parent.postMessage({
         isStreamlitMessage: true,
         type: "streamlit:setComponentValue",
         value: value,
         dataType: "json"
     }, "*");
+
+    // Setup retry
+    if (retryInterval) clearInterval(retryInterval);
+    retryInterval = setInterval(() => {
+        if (pendingAction) {
+            window.parent.postMessage({
+                isStreamlitMessage: true,
+                type: "streamlit:setComponentValue",
+                value: {action: pendingAction},
+                dataType: "json"
+            }, "*");
+        } else {
+            clearInterval(retryInterval);
+        }
+    }, 300);
 }
 
-document.getElementById('btn-start').onclick = function() { sendValue({action: "start"}); };
-document.getElementById('btn-stop').onclick = function() { sendValue({action: "stop"}); };
+document.getElementById('btn-start').onclick = function() { 
+    this.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> STARTING...';
+    this.classList.add('opacity-75', 'cursor-not-allowed');
+    sendValue({action: "start"}); 
+};
+
+document.getElementById('btn-stop').onclick = function() { 
+    this.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> STOPPING...';
+    this.classList.add('opacity-75', 'cursor-not-allowed');
+    sendValue({action: "stop"}); 
+};
 
 function setFilter(f) {
     currentFilter = f;
@@ -539,6 +568,18 @@ window.addEventListener("message", (event) => {
         const overlay = document.getElementById('waiting-overlay');
         overlay.style.display = 'flex';
         
+        // Clear pending action if backend acknowledges state change
+        if ((d.feed_active && pendingAction === 'start') || (!d.feed_active && pendingAction === 'stop')) {
+            pendingAction = null;
+            // Send null action to clear the backend state so it stops triggering
+            window.parent.postMessage({
+                isStreamlitMessage: true,
+                type: "streamlit:setComponentValue",
+                value: {action: null},
+                dataType: "json"
+            }, "*");
+        }
+        
         const banner = document.getElementById('main-status-banner');
         
         if (!d.feed_active) {
@@ -561,30 +602,48 @@ window.addEventListener("message", (event) => {
 </div>`;
         } else if (d.status === 'FRESH') {
             overlay.innerHTML = `
-<div class="border border-[#34c759] bg-[#003e1e]/80 backdrop-blur-sm px-lg py-md rounded flex items-center gap-md">
-<span class="material-symbols-outlined text-4xl text-[#34c759]">check_circle</span>
-<div>
-<div class="font-headline-md text-headline-md text-[#a0f0c0]">ACCEPTED - FRESH</div>
-<div class="font-label-md text-label-md text-[#34c759]">Healthy Guava Detected</div>
-</div>
+<div class="w-full h-full flex flex-col justify-between">
+    <div class="w-full bg-[#10b981] text-white py-3 flex items-center justify-center gap-3">
+        <span class="material-symbols-outlined text-4xl">check_circle</span>
+        <span class="text-4xl font-bold tracking-widest uppercase text-white">ACCEPTED - FRESH</span>
+    </div>
+    <div class="w-full bg-surface-container-lowest/95 backdrop-blur-md border-t border-[#10b981] p-4 flex items-center gap-4">
+        <span class="material-symbols-outlined text-[#10b981] text-5xl">check_circle</span>
+        <div>
+            <div class="text-[#10b981] text-2xl font-bold mb-1">Fresh Guava Detected Successfully</div>
+            <div class="text-on-surface-variant text-base">High quality fruit - Accepted for production</div>
+        </div>
+    </div>
 </div>`;
         } else if (d.status === 'ROTTEN') {
             overlay.innerHTML = `
-<div class="border border-error bg-error-container/90 backdrop-blur-sm px-lg py-md rounded flex items-center gap-md">
-<span class="material-symbols-outlined text-4xl text-on-error-container">cancel</span>
-<div>
-<div class="font-headline-md text-headline-md text-on-error-container">REJECTED - ROTTEN</div>
-<div class="font-label-md text-label-md text-error">Defective Guava Detected</div>
-</div>
+<div class="w-full h-full flex flex-col justify-between">
+    <div class="w-full bg-error text-on-error py-3 flex items-center justify-center gap-3">
+        <span class="material-symbols-outlined text-4xl">cancel</span>
+        <span class="text-4xl font-bold tracking-widest uppercase">REJECTED - ROTTEN</span>
+    </div>
+    <div class="w-full bg-surface-container-lowest/95 backdrop-blur-md border-t border-error p-4 flex items-center gap-4">
+        <span class="material-symbols-outlined text-error text-5xl">cancel</span>
+        <div>
+            <div class="text-error text-2xl font-bold mb-1">Defective Guava Detected</div>
+            <div class="text-on-surface-variant text-base">Poor quality fruit - Rejected from production line</div>
+        </div>
+    </div>
 </div>`;
         } else if (d.status === 'NOT A GUAVA') {
             overlay.innerHTML = `
-<div class="border border-[#ffb300] bg-[#5c3e00]/90 backdrop-blur-sm px-lg py-md rounded flex items-center gap-md">
-<span class="material-symbols-outlined text-4xl text-[#ffdd88]">help</span>
-<div>
-<div class="font-headline-md text-headline-md text-[#ffdd88]">UNKNOWN OBJECT</div>
-<div class="font-label-md text-label-md text-[#ffb300]">Not a Guava</div>
-</div>
+<div class="w-full h-full flex flex-col justify-between">
+    <div class="w-full bg-[#ffb300] text-black py-3 flex items-center justify-center gap-3">
+        <span class="material-symbols-outlined text-4xl">help</span>
+        <span class="text-4xl font-bold tracking-widest uppercase">UNKNOWN OBJECT</span>
+    </div>
+    <div class="w-full bg-surface-container-lowest/95 backdrop-blur-md border-t border-[#ffb300] p-4 flex items-center gap-4">
+        <span class="material-symbols-outlined text-[#ffb300] text-5xl">help</span>
+        <div>
+            <div class="text-[#ffb300] text-2xl font-bold mb-1">Foreign Object Detected</div>
+            <div class="text-on-surface-variant text-base">Item is not recognized as a Guava</div>
+        </div>
+    </div>
 </div>`;
         }
         
@@ -634,6 +693,25 @@ window.addEventListener("message", (event) => {
         if (!d.feed_active) labelTxt = 'OFFLINE';
         
         document.getElementById('gauge-label').innerText = labelTxt;
+        if (d.status === 'FRESH') {
+            document.getElementById('gauge-ring').style.stroke = '#34c759';
+        } else if (d.status === 'ROTTEN') {
+            document.getElementById('gauge-ring').style.stroke = '#ff3b30';
+        } else if (d.status === 'NOT A GUAVA') {
+            document.getElementById('gauge-ring').style.stroke = '#ffb300';
+        } else {
+            document.getElementById('gauge-ring').style.stroke = '#2fd9f4';
+        }
+        
+        // Reset button states
+        const btnStart = document.getElementById('btn-start');
+        btnStart.innerHTML = '<span class="material-symbols-outlined text-sm">play_arrow</span> START FEED';
+        btnStart.classList.remove('opacity-75', 'cursor-not-allowed');
+        
+        const btnStop = document.getElementById('btn-stop');
+        btnStop.innerHTML = '<span class="material-symbols-outlined text-sm">stop</span> STOP FEED';
+        btnStop.classList.remove('opacity-75', 'cursor-not-allowed');
+
         document.getElementById('gauge-label').style.color = d.is_waiting ? '#2fd9f4' : d.color;
         
         const ring = document.getElementById('gauge-ring');
@@ -643,6 +721,12 @@ window.addEventListener("message", (event) => {
         if (d.history_html !== window.lastHistoryHtml) {
             applyHistory(d.history_html, true);
         }
+        
+        window.parent.postMessage({
+            isStreamlitMessage: true,
+            type: "streamlit:setFrameHeight",
+            height: 1000
+        }, "*");
     }
 });
 

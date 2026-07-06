@@ -10,8 +10,8 @@ class Camera:
         self.device_id = device_id
         self.force_simulation = force_simulation
         
-        # Try to open the webcam
-        self.cap = cv2.VideoCapture(device_id)
+        # Try to open the webcam using DirectShow (bypasses slow MSMF timeouts on Windows)
+        self.cap = cv2.VideoCapture(device_id, cv2.CAP_DSHOW)
         
         # Determine if we should run in simulation mode
         self.is_simulation = force_simulation or not self.cap.isOpened()
